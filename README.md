@@ -39,14 +39,14 @@ Open: **http://localhost:8080**
 
 ## Deploy to Render.com
 
-1. Create a **Web Service** and connect your Git repo (or push this project).
-2. Set:
-   - **Build command:** `mvn -B dependency:go-offline package -DskipTests`
-   - **Start command:** `java -Dserver.port=$PORT -Dspring.profiles.active=render -jar target/retailnexus-1.0.0.jar`
-3. **Environment:** Add `SPRING_PROFILES_ACTIVE=render` (optional if set in start command). Render sets `PORT` automatically.
-4. Deploy. The app will be available at `https://<your-service>.onrender.com`.
+The repo includes a **Blueprint** (`render.yaml`) and **Dockerfile** for one-click deploy:
 
-**Note:** With `render` profile, H2 uses an in-memory database. Data resets on each deploy. For persistent data on Render, use an external database (e.g. Render PostgreSQL) and switch `spring.datasource.*` and JPA dialect accordingly.
+1. Push the repo to GitHub (see [DEPLOY.md](DEPLOY.md)).
+2. Go to **[dashboard.render.com](https://dashboard.render.com)** → **New** → **Blueprint**.
+3. Connect GitHub and select this repo. Render will create a Web Service from the Dockerfile.
+4. Click **Apply**. The app will be at `https://<your-service>.onrender.com`.
+
+**Note:** With the `render` profile, H2 uses an in-memory database. Data resets on each deploy. For persistent data, use Render PostgreSQL and update `application-render.properties`.
 
 ## Project Structure
 
