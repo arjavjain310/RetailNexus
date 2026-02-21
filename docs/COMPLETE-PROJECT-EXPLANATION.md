@@ -266,7 +266,7 @@ Relations:
 
 - **Repo:** GitHub (e.g. `arjavjain310/RetailNexus`).
 - **Config:** `render.yaml` + `Dockerfile`. Service type: Web, runtime: Docker. Env: `SPRING_PROFILES_ACTIVE=render`.
-- **Database:** H2 in-memory (data resets on each deploy). For persistent data, add Render PostgreSQL and update `application-render.properties`.
+- **Database:** H2 in-memory (data resets on each deploy).
 - **Flow:** Push to `main` → Render auto-deploys (if enabled). App URL: `https://<service-name>.onrender.com`.
 
 ---

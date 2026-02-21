@@ -185,7 +185,7 @@ Relations:
 ## 7. Deployment
 
 - **Local**: `./mvnw spring-boot:run` → app at `http://localhost:8080`; H2 file DB under `./data/`.
-- **Render**: Repo has **Dockerfile** (multi-stage: Maven build → JRE + jar) and **render.yaml** (web service, Docker runtime, env `SPRING_PROFILES_ACTIVE=render`). Render builds the image and runs the jar; H2 in-memory (data resets on deploy). Optional: use Render PostgreSQL and switch `application-render.properties` for persistent data.
+- **Render**: Repo has **Dockerfile** (multi-stage: Maven build → JRE + jar) and **render.yaml** (web service, Docker runtime, env `SPRING_PROFILES_ACTIVE=render`). Render builds the image and runs the jar; H2 in-memory (data resets on deploy).
 
 ---
 

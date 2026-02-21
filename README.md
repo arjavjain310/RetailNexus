@@ -46,7 +46,7 @@ The repo includes a **Blueprint** (`render.yaml`) and **Dockerfile** for one-cli
 3. Connect GitHub and select this repo. Render will create a Web Service from the Dockerfile.
 4. Click **Apply**. The app will be at `https://<your-service>.onrender.com`.
 
-**Note:** With the `render` profile, H2 uses an in-memory database. Data resets on each deploy. For persistent data, use Render PostgreSQL and update `application-render.properties`.
+**Note:** With the `render` profile, H2 uses an in-memory database on Render; data resets on each deploy.
 
 ## Project Structure
 

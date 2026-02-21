@@ -25,7 +25,6 @@
 - **Persistence:** Data is **not** stored permanently. It is **lost** when:
   - The service is redeployed (e.g. after a new push to GitHub),
   - The service restarts or scales down (e.g. free tier spin-down).
-- To have **persistent** data on Render, you would add an external database (e.g. Render PostgreSQL) and change `application-render.properties` to use that instead of H2 in-memory.
 
 ### Summary table
 
@@ -151,7 +150,7 @@ Connect the GitHub repo to Render, use the repo’s Dockerfile and render.yaml (
 Vercel is aimed at static sites and serverless functions. This app is a long-running Java/Spring Boot server, so it is deployed on Render (or similar) instead. Vercel could only host a static landing page, not the actual application.
 
 **Q31. Does the app need an external database in production?**  
-No for a demo or short-lived data: Render can run it with in-memory H2. For production with persistent data, you would add a database (e.g. Render PostgreSQL) and point `application-render.properties` to it.
+No for a demo or short-lived data: Render can run it with in-memory H2.
 
 ---
 
