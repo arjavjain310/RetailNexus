@@ -64,8 +64,7 @@ public class BillingController {
 
     @GetMapping("/invoice/{id}/pdf")
     public ResponseEntity<byte[]> invoicePdf(@PathVariable Long id) {
-        Sale sale = saleService.findByIdWithItems(id).orElseThrow();
-        byte[] pdf = pdfReportService.generateInvoicePdf(sale);
+        byte[] pdf = pdfReportService.generateInvoicePdf(id);
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice-" + id + ".pdf")
             .contentType(MediaType.APPLICATION_PDF)
