@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, ~{::scripts})}">
+<head><title>Billing</title></head>
+<body>
+<th:block th:fragment="content">
+    <h1 class="h4 mb-4">Billing</h1>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span>Products</span>
+                    <span class="badge bg-light text-primary" th:text="${#lists.size(products)}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height:420px;overflow-y:auto">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead class="table-light sticky-top"><tr><th>Name</th><th>Quantity in cart</th><th>Cost Price</th><th>Selling Price</th><th></th></tr></thead>
+                            <tbody>
+                            <tr th:each="p : ${products}">
+                                <td th:text="${p.name}"></td>
+                                <td><strong><span class="cart-total-qty" th:attr="data-product-id=${p.id}">0</span></strong></td>
+                                <td th:text="${#numbers.formatDecimal(p.costPrice, 1, 2)}"></td>
+                                <td th:text="${#numbers.formatDecimal(p.sellingPrice, 1, 2)}"></td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary add-to-cart"
+                                        th:data-id="${p.id}" th:data-name="${p.name}" th:data-price="${p.sellingPrice}"
+                                        th:data-unit="${p.unit != null ? p.getUnitLabel() : 'pcs'}"
+                                        th:data-gst="${p.gstPercent != null ? p.gstPercent : 0}">+ Add</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">Cart</div>
+                <div class="card-body">
+                    <div id="cartItems"></div>
+                    <div id="billSummary" class="mt-2 border-top pt-2 d-none">
+                        <p class="mb-1"><strong>Subtotal:</strong> ₹ <span id="summarySubtotal">0.00</span></p>
+                        <p class="mb-1"><strong>Total GST:</strong> ₹ <span id="summaryGst">0.00</span></p>
+                        <p class="mb-2"><strong>Total Amount:</strong> ₹ <span id="summaryGrand" class="fs-5 text-success">0.00</span></p>
+                    </div>
+                    <div id="billTotalBox" class="alert alert-success d-none mb-3" role="alert">
+                        <strong>Bill Total: ₹ <span id="billTotalAmount">0.00</span></strong>
+                    </div>
+                    <form id="cartForm" action="#" th:action="@{/billing/complete}" method="post" class="mt-3">
+                        <input type="hidden" name="items" id="itemsInput"/>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Payment Method</label>
+                            <select name="paymentMethod" id="paymentMethod" class="form-select">
+                                <option value="CASH">Cash</option>
+                                <option value="CREDIT_CARD">Credit / Debit Card</option>
+                                <option value="UPI">UPI</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="completeBtn" class="btn btn-success btn-lg w-100" disabled>Generate Bill / Complete Sale</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addItemModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add to cart</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2"><strong id="modalProductName"></strong></p>
+                    <div class="mb-3">
+                        <label for="modalQty" class="form-label" id="modalQtyLabel">Quantity</label>
+                        <input type="number" id="modalQty" class="form-control" min="0.01" step="0.01" value="1"/>
+                        <small class="text-muted d-none" id="modalQtyHint">For kg/L enter decimal (e.g. 0.7 for 700 g).</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalPrice" class="form-label">Selling Price (₹) — editable</label>
+                        <input type="number" id="modalPrice" class="form-control" min="0" step="0.01" placeholder="Default from product"/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalGst" class="form-label">GST %</label>
+                        <input type="number" id="modalGst" class="form-control" min="0" max="100" step="0.01" placeholder="Product default"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="modalAddBtn">Add to cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        const stockMap = /*[[${stockByProduct}]]*/ {};
+    </script>
+    <script>
+        const cart = {};
+        let pendingAdd = null;
+
+        function buildItemsString() {
+            return Object.entries(cart).map(([id, o]) => {
+                const gst = (o.gst != null && o.gst !== '') ? o.gst : '';
+                return id + ':' + o.qty + ':' + (o.price != null ? o.price : '') + ':' + gst;
+            }).join(';');
+        }
+
+        function lineSubtotal(qty, price) { return (parseFloat(qty) * parseFloat(price)); }
+        function lineGst(qty, price, gstPct) {
+            const pct = (gstPct != null && gstPct !== '' && !isNaN(parseFloat(gstPct))) ? parseFloat(gstPct) : 0;
+            return lineSubtotal(qty, price) * (pct / 100);
+        }
+        function lineTotal(qty, price, gstPct) {
+            return lineSubtotal(qty, price) + lineGst(qty, price, gstPct);
+        }
+
+        function updateProductListQuantities() {
+            document.querySelectorAll('.cart-total-qty').forEach(function(span) {
+                const id = span.getAttribute('data-product-id');
+                const o = cart[id];
+                if (!o || o.qty == null) {
+                    span.textContent = '0';
+                    return;
+                }
+                const q = parseFloat(o.qty);
+                span.textContent = (q === Math.floor(q) ? q : parseFloat(q).toFixed(3).replace(/\.?0+$/, '')) || '0';
+            });
+        }
+
+        function updateBillSummary() {
+            let subtotal = 0, totalGst = 0;
+            for (const [id, o] of Object.entries(cart)) {
+                const gstPct = (o.gst != null && o.gst !== '' && !isNaN(parseFloat(o.gst))) ? parseFloat(o.gst) : 0;
+                subtotal += lineSubtotal(o.qty, o.price);
+                totalGst += lineGst(o.qty, o.price, o.gst);
+            }
+            const grand = subtotal + totalGst;
+            document.getElementById('summarySubtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('summaryGst').textContent = totalGst.toFixed(2);
+            document.getElementById('summaryGrand').textContent = grand.toFixed(2);
+            document.getElementById('billSummary').classList.remove('d-none');
+            document.getElementById('billTotalBox').classList.remove('d-none');
+            document.getElementById('billTotalAmount').textContent = grand.toFixed(2);
+            updateProductListQuantities();
+        }
+
+        function renderCart() {
+            const div = document.getElementById('cartItems');
+            const input = document.getElementById('itemsInput');
+            const btn = document.getElementById('completeBtn');
+            if (Object.keys(cart).length === 0) {
+                div.innerHTML = '<p class="text-muted">Cart is empty. Click <strong>+ Add</strong> on a product, then set quantity and selling price (MRP). Edit in cart if needed. Total amount will appear below when you add items.</p>';
+                input.value = '';
+                btn.disabled = true;
+                document.getElementById('billSummary').classList.add('d-none');
+                document.getElementById('billTotalBox').classList.add('d-none');
+                updateProductListQuantities();
+                return;
+            }
+            function qtyDisplay(qty, unit) {
+                if (unit === 'kg' || unit === 'l') return (parseFloat(qty) === Math.floor(qty) ? qty : parseFloat(qty).toFixed(3).replace(/\.?0+$/, '')) + ' ' + unit;
+                return String(qty);
+            }
+            let html = '<table class="table table-sm align-middle"><thead><tr><th>Product</th><th>Quantity</th><th>Selling Price</th><th>GST %</th><th>GST Amt</th><th>Line Total</th><th></th></tr></thead><tbody>';
+            for (const [id, o] of Object.entries(cart)) {
+                const gstPct = (o.gst != null && o.gst !== '') ? parseFloat(o.gst) : 0;
+                const sub = lineSubtotal(o.qty, o.price);
+                const gstAmt = lineGst(o.qty, o.price, o.gst);
+                const tot = sub + gstAmt;
+                const gstVal = (o.gst != null && o.gst !== '') ? o.gst : '';
+                const step = (o.unit === 'kg' || o.unit === 'l') ? '0.01' : '1';
+                const minVal = (o.unit === 'kg' || o.unit === 'l') ? '0.01' : '1';
+                html += '<tr data-id="' + id + '"><td>' + escapeHtml(o.name) + '</td><td>' +
+                    '<input type="number" class="form-control form-control-sm cart-qty" style="width:70px" min="' + minVal + '" step="' + step + '" value="' + o.qty + '"/></td>' +
+                    '<td><input type="number" class="form-control form-control-sm cart-price" style="width:80px" min="0" step="0.01" value="' + o.price + '" title="Selling price (editable)"/></td>' +
+                    '<td><input type="number" class="form-control form-control-sm cart-gst" style="width:60px" min="0" max="100" step="0.01" value="' + gstVal + '" placeholder="-"/></td>' +
+                    '<td class="cart-row-gst">' + gstAmt.toFixed(2) + '</td>' +
+                    '<td class="cart-row-total">' + tot.toFixed(2) + '</td>' +
+                    '<td><button type="button" class="btn btn-sm btn-outline-danger remove-cart">×</button></td></tr>';
+            }
+            html += '</tbody></table>';
+            div.innerHTML = html;
+            input.value = buildItemsString();
+            btn.disabled = false;
+            updateBillSummary();
+
+            div.querySelectorAll('.remove-cart').forEach(el => {
+                el.addEventListener('click', function() {
+                    const id = this.closest('tr').dataset.id;
+                    delete cart[id];
+                    renderCart();
+                });
+            });
+            div.querySelectorAll('.cart-qty').forEach(inp => {
+                inp.addEventListener('change', function() {
+                    const id = this.closest('tr').dataset.id;
+                    let v = parseFloat(this.value);
+                    const minV = (cart[id].unit === 'kg' || cart[id].unit === 'l') ? 0.01 : 1;
+                    if (isNaN(v) || v < minV) v = minV;
+                    cart[id].qty = v;
+                    this.value = v;
+                    updateRowTotals(this.closest('tr'));
+                    document.getElementById('itemsInput').value = buildItemsString();
+                    updateBillSummary();
+                });
+            });
+            div.querySelectorAll('.cart-price').forEach(inp => {
+                inp.addEventListener('change', function() {
+                    const id = this.closest('tr').dataset.id;
+                    let v = parseFloat(this.value);
+                    if (isNaN(v) || v < 0) v = 0;
+                    cart[id].price = v;
+                    this.value = v;
+                    updateRowTotals(this.closest('tr'));
+                    document.getElementById('itemsInput').value = buildItemsString();
+                    updateBillSummary();
+                });
+            });
+            div.querySelectorAll('.cart-gst').forEach(inp => {
+                inp.addEventListener('change', function() {
+                    const id = this.closest('tr').dataset.id;
+                    let v = this.value;
+                    if (v !== '' && (isNaN(parseFloat(v)) || parseFloat(v) < 0)) v = '';
+                    cart[id].gst = v;
+                    this.value = v;
+                    updateRowTotals(this.closest('tr'));
+                    document.getElementById('itemsInput').value = buildItemsString();
+                    updateBillSummary();
+                });
+            });
+        }
+
+        function updateRowTotals(row) {
+            const id = row.dataset.id;
+            const qty = parseFloat(row.querySelector('.cart-qty').value) || (cart[id] && (cart[id].unit === 'kg' || cart[id].unit === 'l') ? 0.01 : 1);
+            const price = parseFloat(row.querySelector('.cart-price').value) || 0;
+            const gstInp = row.querySelector('.cart-gst');
+            const gstVal = gstInp.value;
+            cart[id].qty = qty;
+            cart[id].price = price;
+            cart[id].gst = gstVal;
+            const gstAmt = lineGst(qty, price, gstVal);
+            const tot = lineTotal(qty, price, gstVal);
+            row.querySelector('.cart-row-gst').textContent = gstAmt.toFixed(2);
+            row.querySelector('.cart-row-total').textContent = tot.toFixed(2);
+        }
+
+        function escapeHtml(s) {
+            const div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
+
+        document.querySelectorAll('.add-to-cart').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const qty = 1;
+                const name = this.dataset.name;
+                const price = parseFloat(this.dataset.price);
+                const unit = (this.dataset.unit || 'pcs').toLowerCase();
+                const gst = this.dataset.gst != null && this.dataset.gst !== '' ? parseFloat(this.dataset.gst) : null;
+                const stock = stockMap[id] != null ? stockMap[id] : 0;
+                pendingAdd = { id, name, price, stock, unit, gst };
+                document.getElementById('modalProductName').textContent = name;
+                if (unit === 'kg' || unit === 'l') {
+                    document.getElementById('modalQtyLabel').textContent = 'Quantity';
+                    document.getElementById('modalQty').setAttribute('min', '0.01');
+                    document.getElementById('modalQty').setAttribute('step', '0.01');
+                    document.getElementById('modalQtyHint').textContent = 'Enter decimal (e.g. 0.7 for 700 g).';
+                    document.getElementById('modalQtyHint').classList.remove('d-none');
+                } else {
+                    document.getElementById('modalQtyLabel').textContent = 'Quantity';
+                    document.getElementById('modalQty').setAttribute('min', '1');
+                    document.getElementById('modalQty').setAttribute('step', '1');
+                    document.getElementById('modalQtyHint').classList.add('d-none');
+                }
+                document.getElementById('modalQty').value = qty;
+                if (stock > 0) document.getElementById('modalQty').setAttribute('max', stock);
+                else document.getElementById('modalQty').removeAttribute('max');
+                document.getElementById('modalPrice').value = price.toFixed(2);
+                document.getElementById('modalGst').value = gst != null ? gst : '';
+                document.getElementById('modalGst').placeholder = gst != null ? '' : 'Product default';
+                new bootstrap.Modal(document.getElementById('addItemModal')).show();
+            });
+        });
+
+        document.getElementById('modalAddBtn').addEventListener('click', function() {
+            if (!pendingAdd) return;
+            const qtyVal = document.getElementById('modalQty').value;
+            const qty = (qtyVal !== '' && !isNaN(parseFloat(qtyVal)) && parseFloat(qtyVal) > 0) ? parseFloat(qtyVal) : (pendingAdd.unit === 'kg' || pendingAdd.unit === 'l' ? 0.01 : 1);
+            const price = parseFloat(document.getElementById('modalPrice').value) || 0;
+            const gstVal = document.getElementById('modalGst').value;
+            const gst = (gstVal !== '' && !isNaN(parseFloat(gstVal))) ? parseFloat(gstVal) : (pendingAdd.gst != null ? String(pendingAdd.gst) : '');
+            const take = qty > 0 ? qty : (pendingAdd.unit === 'kg' || pendingAdd.unit === 'l' ? 0.01 : 1);
+            if (!cart[pendingAdd.id]) cart[pendingAdd.id] = { name: pendingAdd.name, price: pendingAdd.price, qty: 0, unit: pendingAdd.unit, gst: pendingAdd.gst != null ? String(pendingAdd.gst) : '' };
+            cart[pendingAdd.id].qty += take;
+            cart[pendingAdd.id].price = price;
+            cart[pendingAdd.id].unit = pendingAdd.unit;
+            cart[pendingAdd.id].gst = (typeof gst === 'number') ? String(gst) : gst;
+            bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
+            pendingAdd = null;
+            renderCart();
+        });
+
+        document.getElementById('addItemModal').addEventListener('shown.bs.modal', function() {
+            document.getElementById('modalQty').focus();
+        });
+    </script>
+</th:block>
+</body>
+</html>

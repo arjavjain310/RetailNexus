@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, ~{::scripts})}">
+<head><title>Daily Sales</title></head>
+<body>
+<th:block th:fragment="content">
+    <h1 class="h4 mb-4">Daily Sales Report</h1>
+    <form method="get" class="mb-3 d-flex gap-2 align-items-center">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" th:value="${#temporals.format(date, 'yyyy-MM-dd')}" class="form-control" style="max-width:180px"/>
+        <button type="submit" class="btn btn-primary">View</button>
+        <a th:href="@{/reports/daily/pdf(date=${#temporals.format(date, 'yyyy-MM-dd')})}" class="btn btn-secondary">Export PDF</a>
+    </form>
+    <p><strong>Total: </strong><span th:text="${#numbers.formatDecimal(total, 1, 2)}"></span></p>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead><tr><th>Sale ID</th><th>Time</th><th>Total</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="s : ${sales}">
+                <td th:text="${s.id}"></td>
+                <td th:text="${#temporals.format(s.saleDate, 'yyyy-MM-dd HH:mm')}"></td>
+                <td th:text="${#numbers.formatDecimal(s.totalAmount, 1, 2)}"></td>
+                <td><a th:href="@{/billing/invoice/{id}(id=${s.id})}">Invoice</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <a th:href="@{/reports}" class="btn btn-outline-secondary">Back</a>
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

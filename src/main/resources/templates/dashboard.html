@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, ~{::scripts})}">
+<head><title>Dashboard</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="page-title mb-1">Dashboard</h1>
+            <p class="page-subtitle mb-0">Overview of your retail performance</p>
+        </div>
+        <div class="d-flex gap-2 quick-action">
+            <a th:href="@{/billing}" class="btn btn-primary">New Sale</a>
+            <a th:href="@{/inventory/add-stock}" class="btn btn-outline-primary">Add Stock</a>
+            <a th:href="@{/reports}" class="btn btn-outline-secondary">Reports</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card dash-card card-sales text-white h-100">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">Sales Today</div>
+                        <div class="dash-value" th:text="${'₹' + #numbers.formatDecimal(totalSalesToday, 1, 2)}">₹0</div>
+                    </div>
+                    <div class="dash-icon bg-white bg-opacity-25">💰</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card dash-card card-revenue text-white h-100">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">Monthly Revenue</div>
+                        <div class="dash-value" th:text="${'₹' + #numbers.formatDecimal(monthlyRevenue, 1, 2)}">₹0</div>
+                    </div>
+                    <div class="dash-icon bg-white bg-opacity-25">📈</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card dash-card card-profit text-white h-100">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">Total Profit</div>
+                        <div class="dash-value" th:text="${'₹' + #numbers.formatDecimal(totalProfit, 1, 2)}">₹0</div>
+                    </div>
+                    <div class="dash-icon bg-white bg-opacity-25">💵</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card dash-card card-low h-100">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">Low Stock</div>
+                        <div class="dash-value" th:text="${lowStockCount}">0</div>
+                    </div>
+                    <div class="dash-icon bg-dark bg-opacity-10">⚠️</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card dash-card card-expiry text-white h-100">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">Near Expiry</div>
+                        <div class="dash-value" th:text="${nearExpiryCount}">0</div>
+                    </div>
+                    <div class="dash-icon bg-white bg-opacity-25">📅</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card dash-card card-dead text-white h-100">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">Dead Stock</div>
+                        <div class="dash-value" th:text="${deadStockCount}">0</div>
+                    </div>
+                    <div class="dash-icon bg-white bg-opacity-25">📦</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card chart-card">
+                <div class="card-header">Monthly Sales Trend</div>
+                <div class="card-body"><canvas id="monthlyChart" height="220"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card chart-card">
+                <div class="card-header">Profit by Category</div>
+                <div class="card-body"><canvas id="profitChart" height="220"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card chart-card">
+                <div class="card-header">Category-wise Sales</div>
+                <div class="card-body"><canvas id="categoryChart" height="140"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card chart-card mt-3" th:if="${!#lists.isEmpty(restockSuggestions)}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Restock Suggestions (last 30 days)</span>
+            <a th:href="@{/inventory/add-stock}" class="btn btn-sm btn-outline-primary">Add Stock</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Product</th><th>Current Stock</th><th>Avg Daily Sales</th><th>Suggested Order</th></tr></thead>
+                    <tbody>
+                    <tr th:each="s : ${restockSuggestions}">
+                        <td th:text="${s.product.name}"></td>
+                        <td th:text="${s.currentStock}"></td>
+                        <td th:text="${s.avgDailySales}"></td>
+                        <td th:text="${s.suggestedOrder}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</th:block>
+<th:block th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script th:inline="javascript">
+        const monthlyLabels = /*[[${monthlyLabels}]]*/ [];
+        const monthlyData = /*[[${monthlyData}]]*/ [];
+        const categoryLabels = /*[[${categoryLabels}]]*/ [];
+        const categoryData = /*[[${categoryData}]]*/ [];
+        const profitLabels = /*[[${profitLabels}]]*/ [];
+        const profitData = /*[[${profitData}]]*/ [];
+    </script>
+    <script>
+        const font = { family: "'Segoe UI', system-ui, sans-serif" };
+        const grid = { color: 'rgba(0,0,0,0.06)' };
+        new Chart(document.getElementById('monthlyChart'), {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Sales (₹)',
+                    data: monthlyData,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.08)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: grid, ticks: { font: font } },
+                    y: { grid: grid, ticks: { font: font } }
+                }
+            }
+        });
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'bar',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    label: 'Sales (₹)',
+                    data: categoryData,
+                    backgroundColor: 'rgba(25, 135, 84, 0.8)',
+                    borderColor: '#198754',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: grid, ticks: { font: font } },
+                    y: { grid: grid, ticks: { font: font } }
+                }
+            }
+        });
+        new Chart(document.getElementById('profitChart'), {
+            type: 'doughnut',
+            data: {
+                labels: profitLabels,
+                datasets: [{
+                    data: profitData,
+                    backgroundColor: ['#0d6efd','#198754','#ffc107','#dc3545','#6f42c1','#fd7e14','#20c997','#e83e8c']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>

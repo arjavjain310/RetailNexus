@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, ~{::scripts})}">
+<head><title>Inventory</title></head>
+<body>
+<th:block th:fragment="content">
+    <h1 class="h4 mb-4">Inventory</h1>
+    <p th:if="${message}" class="alert alert-success" th:text="${message}"></p>
+    <p class="text-muted small">Set stock for each product below. Stock is deducted automatically when you complete a sale in Billing.</p>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead><tr><th>Product</th><th>Category</th><th>Total Stock</th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${products}">
+                <td th:text="${p.name}"></td>
+                <td th:text="${p.category}"></td>
+                <td>
+                    <form th:action="@{/inventory/set-stock}" method="post" class="d-inline-flex gap-1 align-items-center">
+                        <input type="hidden" name="productId" th:value="${p.id}"/>
+                        <input type="number" name="quantity" th:value="${stockByProduct[p.id] != null ? stockByProduct[p.id] : 0}" class="form-control form-control-sm" style="width:100px" min="-9999" required/>
+                        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

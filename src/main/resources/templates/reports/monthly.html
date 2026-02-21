@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, ~{::scripts})}">
+<head><title>Monthly Report</title></head>
+<body>
+<th:block th:fragment="content">
+    <h1 class="h4 mb-4">Monthly Report</h1>
+    <form method="get" class="mb-3 d-flex gap-2 align-items-center">
+        <select name="year" class="form-select" style="max-width:120px">
+            <option th:each="y : ${#numbers.sequence(2023, 2030)}" th:value="${y}" th:text="${y}" th:selected="${y == year}"></option>
+        </select>
+        <select name="month" class="form-select" style="max-width:120px">
+            <option th:each="m : ${#numbers.sequence(1, 12)}" th:value="${m}" th:text="${m}" th:selected="${m == month}"></option>
+        </select>
+        <button type="submit" class="btn btn-primary">View</button>
+    </form>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead><tr><th>Sale ID</th><th>Date</th><th>Total</th><th>Profit</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="s : ${sales}">
+                <td th:text="${s.id}"></td>
+                <td th:text="${#temporals.format(s.saleDate, 'yyyy-MM-dd HH:mm')}"></td>
+                <td th:text="${#numbers.formatDecimal(s.totalAmount, 1, 2)}"></td>
+                <td th:text="${#numbers.formatDecimal(s.totalProfit, 1, 2)}"></td>
+                <td><a th:href="@{/billing/invoice/{id}(id=${s.id})}">Invoice</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <a th:href="@{/reports}" class="btn btn-outline-secondary">Back</a>
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

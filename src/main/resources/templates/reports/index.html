@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, ~{::scripts})}">
+<head><title>Reports</title></head>
+<body>
+<th:block th:fragment="content">
+    <h1 class="h4 mb-4">Reports</h1>
+    <div class="list-group" style="max-width:400px">
+        <a th:href="@{/reports/daily}" class="list-group-item list-group-item-action">Daily Sales Report</a>
+        <a th:href="@{/reports/monthly}" class="list-group-item list-group-item-action">Monthly Report</a>
+        <a th:href="@{/reports/low-stock}" class="list-group-item list-group-item-action">Low Stock Report</a>
+        <a th:href="@{/reports/dead-stock}" class="list-group-item list-group-item-action">Dead Stock Report</a>
+    </div>
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, ~{::scripts})}">
+<head><title>Products</title></head>
+<body>
+<th:block th:fragment="content">
+    <h1 class="page-title mb-1">Products</h1>
+    <p class="page-subtitle mb-4">Manage your product catalog</p>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <form method="get" class="d-flex gap-2 flex-wrap">
+            <input type="text" name="search" th:value="${search}" class="form-control" style="max-width:200px" placeholder="Search name"/>
+            <select name="category" class="form-select" style="max-width:180px">
+                <option value="">All categories</option>
+                <option th:each="c : ${categories}" th:value="${c}" th:text="${c}" th:selected="${c == categoryFilter}"></option>
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+        <a th:href="@{/products/new}" class="btn btn-success">Add Product</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead><tr><th>Name</th><th>Barcode</th><th>Category</th><th>Cost</th><th>Selling Price</th><th>GST %</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${products}">
+                <td th:text="${p.name}"></td>
+                <td th:text="${p.barcode}"></td>
+                <td th:text="${p.category}"></td>
+                <td th:text="${#numbers.formatDecimal(p.costPrice, 1, 2)}"></td>
+                <td th:text="${#numbers.formatDecimal(p.sellingPrice, 1, 2)}"></td>
+                <td th:text="${#numbers.formatDecimal(p.gstPercent, 1, 2)}"></td>
+                <td>
+                    <a th:href="@{/products/{id}/edit(id=${p.id})}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <form th:action="@{/products/{id}/delete(id=${p.id})}" method="post" class="d-inline" onsubmit="return confirm('Delete this product?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

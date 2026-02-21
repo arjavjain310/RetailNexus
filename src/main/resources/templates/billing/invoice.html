@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, ~{::scripts})}">
+<head><title>Invoice</title></head>
+<body>
+<th:block th:fragment="content">
+    <h1 class="h4 mb-4">Invoice #<span th:text="${sale.id}"></span></h1>
+    <p>Date: <span th:text="${sale.saleDate != null ? #temporals.format(sale.saleDate, 'yyyy-MM-dd HH:mm') : ''}"></span></p>
+    <p th:if="${sale.soldBy != null}">Sold by: <span th:text="${sale.soldBy.username}"></span></p>
+    <p>Payment: <strong th:text="${sale.paymentMethod != null} ? ${sale.paymentMethod.displayName} : 'Cash'"></strong></p>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead><tr><th>Product</th><th>Quantity</th><th>MRP</th><th>GST %</th><th>GST Amt</th><th>Line Total</th></tr></thead>
+            <tbody>
+            <tr th:each="item : ${sale.items}">
+                <td th:text="${item.product.name}"></td>
+                <td th:text="${item.quantityWithUnit}"></td>
+                <td th:text="${#numbers.formatDecimal(item.unitPrice, 1, 2)}"></td>
+                <td th:text="${item.gstPercent != null ? #numbers.formatDecimal(item.gstPercent, 1, 2) : '-'}"></td>
+                <td th:text="${#numbers.formatDecimal(item.gstAmount, 1, 2)}"></td>
+                <td th:text="${#numbers.formatDecimal(item.totalPrice, 1, 2)}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p><strong>Total Amount: </strong><span th:text="${#numbers.formatDecimal(sale.totalAmount, 1, 2)}"></span></p>
+    <p><strong>Total GST: </strong><span th:text="${#numbers.formatDecimal(sale.totalGst, 1, 2)}"></span></p>
+    <p><strong>Total Profit: </strong><span th:text="${#numbers.formatDecimal(sale.totalProfit, 1, 2)}"></span></p>
+    <a th:href="@{/billing/invoice/{id}/pdf(id=${sale.id})}" class="btn btn-primary">Download PDF</a>
+    <a th:href="@{/billing}" class="btn btn-outline-secondary">New Sale</a>
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

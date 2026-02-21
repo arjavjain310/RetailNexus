@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, ~{::scripts})}">
+<head><title>Add Stock</title></head>
+<body>
+<th:block th:fragment="content">
+    <h1 class="h4 mb-4">Add Stock</h1>
+    <form th:action="@{/inventory/add-stock}" method="post" class="card p-4" style="max-width:500px">
+        <div class="mb-3">
+            <label for="productId" class="form-label">Product</label>
+            <select id="productId" name="productId" class="form-select" required>
+                <option value="">Select product</option>
+                <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.name + ' (' + p.category + ')'}"></option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="quantity" class="form-label">Quantity</label>
+            <input id="quantity" name="quantity" type="number" min="1" class="form-control" required/>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Stock</button>
+        <a th:href="@{/inventory}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>
