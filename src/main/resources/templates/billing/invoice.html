@@ -25,8 +25,7 @@
     <p><strong>Total Amount: </strong><span th:text="${#numbers.formatDecimal(sale.totalAmount, 1, 2)}"></span></p>
     <p><strong>Total GST: </strong><span th:text="${#numbers.formatDecimal(sale.totalGst, 1, 2)}"></span></p>
     <p><strong>Total Profit: </strong><span th:text="${#numbers.formatDecimal(sale.totalProfit, 1, 2)}"></span></p>
-    <a th:href="@{/billing/invoice/{id}/pdf(id=${sale.id})}" class="btn btn-primary">Download PDF</a>
-    <a th:href="@{/billing}" class="btn btn-outline-secondary">New Sale</a>
+    <a th:href="@{/billing}" class="btn btn-primary">New Sale</a>
 </th:block>
 <th:block th:fragment="scripts"></th:block>
 </body>

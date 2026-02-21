@@ -6,12 +6,8 @@ import com.retailnexus.entity.User;
 
 import java.math.BigDecimal;
 import com.retailnexus.service.BatchService;
-import com.retailnexus.service.PdfReportService;
 import com.retailnexus.service.ProductService;
 import com.retailnexus.service.SaleService;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -30,16 +26,14 @@ public class BillingController {
     private final ProductService productService;
     private final BatchService batchService;
     private final SaleService saleService;
-    private final PdfReportService pdfReportService;
     private final com.retailnexus.repository.UserRepository userRepository;
 
     public BillingController(ProductService productService, BatchService batchService,
-                              SaleService saleService, PdfReportService pdfReportService,
+                              SaleService saleService,
                               com.retailnexus.repository.UserRepository userRepository) {
         this.productService = productService;
         this.batchService = batchService;
         this.saleService = saleService;
-        this.pdfReportService = pdfReportService;
         this.userRepository = userRepository;
     }
 
@@ -60,15 +54,6 @@ public class BillingController {
         Sale sale = saleService.findById(id).orElseThrow();
         model.addAttribute("sale", sale);
         return "billing/invoice";
-    }
-
-    @GetMapping("/invoice/{id}/pdf")
-    public ResponseEntity<byte[]> invoicePdf(@PathVariable Long id) {
-        byte[] pdf = pdfReportService.generateInvoicePdf(id);
-        return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice-" + id + ".pdf")
-            .contentType(MediaType.APPLICATION_PDF)
-            .body(pdf);
     }
 
     @PostMapping("/complete")
