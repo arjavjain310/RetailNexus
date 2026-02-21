@@ -1,0 +1,10 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Push this repo to GitHub, then connect it in Render Dashboard → New → Blueprint.
+services:
+  - type: web
+    runtime: docker
+    name: retailnexus
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render

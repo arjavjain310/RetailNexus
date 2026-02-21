@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RetailNexus</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%); color: #fff; }
+    .card { text-align: center; padding: 2rem 3rem; border-radius: 12px; background: rgba(255,255,255,0.08); }
+    h1 { margin: 0 0 0.5rem; font-size: 1.75rem; }
+    p { margin: 0 0 1.5rem; opacity: 0.9; font-size: 0.95rem; }
+    a { display: inline-block; padding: 0.75rem 1.5rem; background: #3b82f6; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; }
+    a:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>RetailNexus</h1>
+    <p>Retail Management System</p>
+    <a href="https://retailnexus.onrender.com" id="app-link">Open app</a>
+  </div>
+  <script>
+    var link = document.getElementById('app-link');
+    if (typeof window !== 'undefined' && window.__RENDER_APP_URL__) link.href = window.__RENDER_APP_URL__;
+  </script>
+</body>
+</html>

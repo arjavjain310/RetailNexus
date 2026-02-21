@@ -1,0 +1,8 @@
+target/
+.git/
+.gitignore
+data/
+*.md
+.idea/
+*.iml
+.jdk/
