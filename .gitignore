@@ -26,3 +26,6 @@ data/*.trace.db
 
 # Spring Boot
 application-local.properties
+
+# Exclude Real Estate Price Prediction (lives in its own repo)
+Real-Estate-Price-Prediction/
